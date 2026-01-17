@@ -1,0 +1,111 @@
+/* Login Page Styles */
+.login-page {
+    background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 450px;
+}
+
+.login-card {
+    padding: 48px 40px;
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.login-icon {
+    font-size: 64px;
+    color: var(--mdc-primary);
+    margin-bottom: 16px;
+}
+
+.login-header h1 {
+    font-size: 28px;
+    font-weight: 400;
+    margin-bottom: 8px;
+    color: var(--mdc-text-primary);
+}
+
+.login-header p {
+    color: var(--mdc-text-secondary);
+    font-size: 14px;
+}
+
+.login-form {
+    margin-top: 32px;
+}
+
+.error-message {
+    background: #ffebee;
+    color: var(--mdc-error);
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    border-left: 4px solid var(--mdc-error);
+}
+
+.error-message.hidden {
+    display: none;
+}
+
+.login-footer {
+    margin-top: 32px;
+    text-align: center;
+    padding-top: 24px;
+    border-top: 1px solid var(--mdc-divider);
+}
+
+.login-footer p {
+    color: var(--mdc-text-secondary);
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.login-footer strong {
+    color: var(--mdc-text-primary);
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--mdc-primary);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s;
+}
+
+.back-link:hover {
+    color: var(--mdc-primary-dark);
+}
+
+.back-link .material-icons {
+    font-size: 18px;
+}
+
+.btn-loader.hidden,
+.btn-text.hidden {
+    display: none;
+}

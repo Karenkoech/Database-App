@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Script - Database Audit Tool</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="nav-icon">🔍</span>
+                <span class="nav-title">Database Audit Tool</span>
+            </div>
+            <div class="nav-menu">
+                <a href="/dashboard" class="nav-link active">Dashboard</a>
+                <a href="/contact" class="nav-link">Contact</a>
+                <div class="nav-user">
+                    <span id="userName">User</span>
+                    <button id="logoutBtn" class="logout-btn">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <h1>🔍 Database Audit Tool</h1>
+            <p>AI-Powered Database Script Analysis for IT Auditors</p>
+        </header>
+
+        <main>
+            <section class="upload-section">
+                <h2>Upload Database Script</h2>
+                <p style="color: #666; margin-bottom: 30px; font-size: 0.9em;">
+                    Select your database type and upload <strong>Excel</strong> (.xlsx, .xls) or text files (.sql, .txt, .js, .py). The AI will analyze and report security issues, compliance problems, and provide recommendations.
+                </p>
+                
+                <div class="db-upload-grid">
+                    <!-- MS SQL Server -->
+                    <div class="db-upload-card" data-db="MS SQL Server">
+                        <div class="db-icon">🗄️</div>
+                        <h3>MS SQL Server</h3>
+                        <p>Upload SQL Server scripts</p>
+                        <input type="file" class="db-file-input" data-db="MS SQL Server" accept=".sql,.txt,.js,.py,.xlsx,.xls" hidden>
+                        <button type="button" class="db-upload-btn" data-db="MS SQL Server">📁 Choose File</button>
+                    </div>
+
+                    <!-- SAP HANA -->
+                    <div class="db-upload-card" data-db="SAP HANA">
+                        <div class="db-icon">💾</div>
+                        <h3>SAP HANA</h3>
+                        <p>Upload HANA scripts</p>
+                        <input type="file" class="db-file-input" data-db="SAP HANA" accept=".sql,.txt,.js,.py,.xlsx,.xls" hidden>
+                        <button type="button" class="db-upload-btn" data-db="SAP HANA">📁 Choose File</button>
+                    </div>
+
+                    <!-- Oracle -->
+                    <div class="db-upload-card" data-db="Oracle">
+                        <div class="db-icon">🗃️</div>
+                        <h3>Oracle</h3>
+                        <p>Upload Oracle scripts</p>
+                        <input type="file" class="db-file-input" data-db="Oracle" accept=".sql,.txt,.js,.py,.xlsx,.xls" hidden>
+                        <button type="button" class="db-upload-btn" data-db="Oracle">📁 Choose File</button>
+                    </div>
+
+                    <!-- Other DBs -->
+                    <div class="db-upload-card other-db-card">
+                        <div class="db-icon">📊</div>
+                        <h3>Other DBs</h3>
+                        <p>Select database first</p>
+                        <div class="other-db-dropdown">
+                            <button type="button" class="other-db-toggle" id="otherDbToggle">Select Database ⬇️</button>
+                            <div class="other-db-menu hidden" id="otherDbMenu">
+                                <button type="button" class="other-db-option" data-db="PostgreSQL">PostgreSQL</button>
+                                <button type="button" class="other-db-option" data-db="MySQL">MySQL</button>
+                                <button type="button" class="other-db-option" data-db="MongoDB">MongoDB</button>
+                                <button type="button" class="other-db-option" data-db="DB2">IBM DB2</button>
+                                <button type="button" class="other-db-option" data-db="Sybase">Sybase</button>
+                                <button type="button" class="other-db-option" data-db="Teradata">Teradata</button>
+                                <button type="button" class="other-db-option" data-db="Snowflake">Snowflake</button>
+                                <button type="button" class="other-db-option" data-db="Other">Other</button>
+                            </div>
+                        </div>
+                        <input type="file" class="db-file-input" id="otherDbFileInput" accept=".sql,.txt,.js,.py,.xlsx,.xls" hidden>
+                        <button type="button" class="db-upload-btn hidden" id="otherDbUploadBtn">📁 Choose File</button>
+                        <p class="other-db-hint" id="otherDbHint" style="font-size: 0.85em; color: #999; margin-top: 10px;">Select a database from dropdown above</p>
+                    </div>
+                </div>
+
+                <!-- Selected file display -->
+                <div id="selectedFileInfo" class="selected-file-info hidden">
+                    <div class="selected-file-content">
+                        <span id="selectedDbType" class="selected-db-badge"></span>
+                        <span id="selectedFileName" class="selected-file-name"></span>
+                        <button type="button" id="clearSelection" class="clear-btn">✕</button>
+                    </div>
+                    <button type="button" id="analyzeBtn" class="analyze-button">🔍 Analyze Script</button>
+                </div>
+
+                <form id="uploadForm" enctype="multipart/form-data" style="display: none;">
+                    <input type="file" id="scriptFile" name="script" accept=".sql,.txt,.js,.py,.xlsx,.xls">
+                    <input type="hidden" id="dbType" name="dbType">
+                </form>
+
+                <div id="loading" class="hidden">
+                    <div class="spinner"></div>
+                    <p>Analyzing script... This may take a moment.</p>
+                </div>
+
+                <!-- Error Message Modal -->
+                <div id="errorModal" class="error-modal hidden">
+                    <div class="error-modal-overlay"></div>
+                    <div class="error-modal-content">
+                        <div class="error-modal-header">
+                            <span class="error-icon">⚠️</span>
+                            <h3>DB Mismatch in Scripts Uploaded</h3>
+                            <button type="button" class="error-close" id="errorClose">✕</button>
+                        </div>
+                        <div class="error-modal-body">
+                            <p id="errorMessageText"></p>
+                        </div>
+                        <div class="error-modal-footer">
+                            <button type="button" class="error-ok-btn" id="errorOk">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="results" class="hidden">
+                <h2>Analysis Results</h2>
+                <div class="risk-summary" id="riskSummary"></div>
+                <div class="issues-list" id="issuesList"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/nav.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
