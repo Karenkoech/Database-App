@@ -70,17 +70,52 @@ export function AuthProvider({ children }) {
         body: JSON.stringify(userData)
       });
 
-      const data = await response.json();
+      // Always try to parse JSON first - even for error responses
+      let data;
+      const contentType = response.headers.get('content-type') || '';
+      
+      // Try to parse JSON regardless of status code
+      if (contentType.includes('application/json')) {
+        try {
+          data = await response.json();
+        } catch (jsonError) {
+          console.error('JSON parse error:', jsonError, 'Status:', response.status);
+          // Try to get text as fallback
+          const text = await response.clone().text().catch(() => 'Unable to read response');
+          console.error('Response text:', text);
+          return { 
+            success: false, 
+            message: `Server error (${response.status}). ${data?.message || 'Please try again.'}` 
+          };
+        }
+      } else {
+        // Non-JSON response - read as text
+        const text = await response.text();
+        console.error('Non-JSON response:', text, 'Status:', response.status);
+        return { 
+          success: false, 
+          message: `Server error (${response.status}). ${text || 'Please check server logs.'}` 
+        };
+      }
 
       if (response.ok && data.success) {
         setUser(data.user);
         return { success: true, redirect: data.redirect || '/home' };
       } else {
-        return { success: false, message: data.message || 'Registration failed' };
+        return { success: false, message: data.message || data.error || 'Registration failed' };
       }
     } catch (error) {
-      console.error('Registration error:', error);
-      return { success: false, message: 'Network error. Please try again.' };
+      console.error('Registration fetch error:', error);
+      // Check if it's a network/connection error
+      if (error.message === 'Failed to fetch' || 
+          error.message.includes('fetch') || 
+          error.name === 'TypeError') {
+        return { 
+          success: false, 
+          message: 'Cannot connect to server. Please ensure the backend server is running on port 3000.' 
+        };
+      }
+      return { success: false, message: error.message || 'Network error. Please try again.' };
     }
   };
 
