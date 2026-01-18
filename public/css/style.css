@@ -32,11 +32,32 @@ body {
 }
 
 .nav-brand {
-    display: flex;
+    display: flex !important;
     align-items: center;
     gap: 12px;
     font-size: 20px;
     font-weight: 600;
+    color: #333;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: opacity 0.3s;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 1002 !important;
+    user-select: none;
+}
+
+.nav-brand * {
+    pointer-events: none !important;
+    cursor: inherit !important;
+}
+
+.nav-brand:hover {
+    opacity: 0.8;
+    color: #333;
+}
+
+.nav-brand:visited {
     color: #333;
 }
 
@@ -570,10 +591,12 @@ header p {
     right: 0;
     bottom: 0;
     z-index: 1000;
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: center;
     animation: fadeIn 0.2s ease-out;
+    margin: 0;
+    padding: 0;
 }
 
 .error-modal.hidden {

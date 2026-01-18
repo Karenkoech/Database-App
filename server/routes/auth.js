@@ -21,28 +21,44 @@ router.post('/login', async (req, res) => {
     const user = await getUserByUsername(username);
     
     if (!user) {
+      console.log(`Login attempt failed: User '${username}' not found`);
       return res.status(401).json({ 
         error: 'Invalid credentials', 
         message: 'Username or password is incorrect' 
       });
     }
 
-    // Compare password
-    bcrypt.compare(password, user.password_hash, (err, isMatch) => {
-      if (err) {
-        console.error('Password comparison error:', err);
-        return res.status(500).json({ 
-          error: 'Authentication error', 
-          message: 'Failed to verify password' 
+    // Check if password_hash exists
+    if (!user.password_hash) {
+      console.error(`Login attempt failed: User '${username}' has no password hash`);
+      return res.status(500).json({ 
+        error: 'Authentication error', 
+        message: 'User account error. Please contact administrator.' 
+      });
+    }
+
+    // Compare password using promise
+    try {
+      const isMatch = await new Promise((resolve, reject) => {
+        bcrypt.compare(password, user.password_hash, (err, result) => {
+          if (err) {
+            console.error('Password comparison error:', err);
+            reject(err);
+          } else {
+            resolve(result);
+          }
         });
-      }
+      });
 
       if (!isMatch) {
+        console.log(`Login attempt failed: Incorrect password for user '${username}'`);
         return res.status(401).json({ 
           error: 'Invalid credentials', 
           message: 'Username or password is incorrect' 
         });
       }
+      
+      console.log(`✅ Successful login for user '${username}'`);
 
       // Set session
       req.session.userId = user.id;
@@ -59,7 +75,13 @@ router.post('/login', async (req, res) => {
           fullName: user.full_name
         }
       });
-    });
+    } catch (compareError) {
+      console.error('Password comparison error:', compareError);
+      return res.status(500).json({ 
+        error: 'Authentication error', 
+        message: 'Failed to verify password' 
+      });
+    }
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ 

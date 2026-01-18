@@ -2,7 +2,39 @@
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     setupLogout();
+    setupBrandLink();
 });
+
+function setupBrandLink() {
+    // Force nav-brand link to work - simple direct navigation
+    const navBrand = document.querySelector('.nav-brand');
+    if (navBrand) {
+        // Ensure href is set
+        if (navBrand.tagName === 'A') {
+            navBrand.href = '/';
+        } else {
+            // Convert to anchor if not already
+            const brandContent = navBrand.innerHTML;
+            const newLink = document.createElement('a');
+            newLink.href = '/';
+            newLink.className = 'nav-brand';
+            newLink.style.cssText = 'text-decoration: none; cursor: pointer; display: flex; align-items: center; gap: 12px;';
+            newLink.innerHTML = brandContent;
+            navBrand.parentNode.replaceChild(newLink, navBrand);
+        }
+        
+        // Add explicit click handler as backup - use capture phase
+        const link = navBrand.tagName === 'A' ? navBrand : document.querySelector('.nav-brand');
+        if (link) {
+            link.addEventListener('click', function(e) {
+                // Always navigate - don't rely on default behavior
+                e.stopImmediatePropagation();
+                window.location.href = '/';
+                return false;
+            }, true); // Use capture phase to catch before other handlers
+        }
+    }
+}
 
 async function checkAuth() {
     try {

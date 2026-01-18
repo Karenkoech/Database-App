@@ -281,11 +281,23 @@ export function getUserAnalysisHistory(userId, dbType = null) {
       if (err) {
         reject(err);
       } else {
-        const results = rows.map(row => ({
-          ...row,
-          aiAnalysis: JSON.parse(row.ai_analysis),
-          riskAssessment: JSON.parse(row.risk_assessment)
-        }));
+        const results = rows.map(row => {
+          try {
+            return {
+              ...row,
+              aiAnalysis: row.ai_analysis ? JSON.parse(row.ai_analysis) : null,
+              riskAssessment: row.risk_assessment ? JSON.parse(row.risk_assessment) : null
+            };
+          } catch (parseError) {
+            // If JSON parsing fails, return with raw strings
+            console.warn('Failed to parse JSON for row:', row.id, parseError);
+            return {
+              ...row,
+              aiAnalysis: row.ai_analysis || null,
+              riskAssessment: row.risk_assessment || null
+            };
+          }
+        });
         resolve(results);
       }
     });
