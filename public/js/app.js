@@ -23,13 +23,29 @@ function hideError() {
     }
 }
 
-// Show error message
+// Show error message (for database mismatch)
 function showError(selectedType, detectedTypes) {
     const detectedStr = detectedTypes.length > 0 
         ? detectedTypes.join(' or ') 
         : 'No matching patterns detected';
     
     const message = `You selected: ${selectedType || 'Not selected'}\n\nDetected in file: ${detectedStr}\n\nPlease upload this file using the correct database type.`;
+    
+    const msgText = document.getElementById('errorMessageText');
+    const modal = document.getElementById('errorModal');
+    
+    if (msgText) {
+        msgText.textContent = message;
+    }
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+}
+
+// Show general error message
+function showGeneralError(title, messages) {
+    const messageArray = Array.isArray(messages) ? messages : [messages];
+    const message = `DB Mismatch in Scripts Uploaded\n\n${messageArray.join('\n')}`;
     
     const msgText = document.getElementById('errorMessageText');
     const modal = document.getElementById('errorModal');
@@ -127,6 +143,7 @@ function initApp() {
     scriptFile = document.getElementById('scriptFile');
     dbTypeInput = document.getElementById('dbType');
     analyzeBtn = document.getElementById('analyzeBtn');
+    const analyzeButtonContainer = document.getElementById('analyzeButtonContainer');
     loading = document.getElementById('loading');
     results = document.getElementById('results');
     riskSummary = document.getElementById('riskSummary');
@@ -209,8 +226,12 @@ function initApp() {
         });
     }
 
-    // Close dropdown when clicking outside
+    // Close dropdown when clicking outside (but not on nav-brand links)
     document.addEventListener('click', (e) => {
+        // Don't interfere with nav-brand link clicks - let them work normally
+        if (e.target.closest('.nav-brand')) {
+            return; // Let the link work normally
+        }
         if (otherDbToggle && otherDbMenu && 
             !otherDbToggle.contains(e.target) && 
             !otherDbMenu.contains(e.target)) {
@@ -274,35 +295,54 @@ function initApp() {
 
     // Handle file selection with validation
     async function handleFileSelection(file, dbType) {
-        // Validate database type match
-        const detectedTypes = await detectDatabaseTypeFromFile(file);
-        const isValid = mapDetectedToExpected(detectedTypes, dbType);
+        console.log('File selected:', file.name, 'DB Type:', dbType);
         
-        if (!isValid) {
-            // Show styled error message
-            showError(dbType, detectedTypes);
-            
-            // Clear file inputs
-            document.querySelectorAll('.db-file-input').forEach(input => {
-                if (input.files.length > 0) input.value = '';
-            });
-            if (otherDbFileInput) otherDbFileInput.value = '';
-            return;
-        }
-        
-        // Hide error if validation passes
-        hideError();
-        
+        // Store file and DB type first
         currentFile = file;
         currentDbType = dbType;
         
-        // Update UI
+        // Update UI immediately - show file info and analyze button
         if (selectedDbType) selectedDbType.textContent = dbType;
         if (selectedFileName) selectedFileName.textContent = file.name;
         if (selectedFileInfo) selectedFileInfo.classList.remove('hidden');
         
+        // Show analyze button immediately
+        const analyzeButtonContainer = document.getElementById('analyzeButtonContainer');
+        if (analyzeButtonContainer) {
+            analyzeButtonContainer.classList.remove('hidden');
+            console.log('Analyze button container shown');
+        } else {
+            console.error('Analyze button container not found!');
+        }
+        
         // Store values
         if (dbTypeInput) dbTypeInput.value = dbType;
+        
+        // Check if file is Excel - skip client-side validation for Excel files
+        const fileExt = file.name.toLowerCase();
+        const isExcelFile = fileExt.endsWith('.xlsx') || fileExt.endsWith('.xls');
+        
+        if (isExcelFile) {
+            // Excel files are binary - server will validate them properly
+            console.log('Excel file detected - skipping client-side validation');
+            hideError(); // Hide any previous errors
+        } else {
+            // Validate database type match for text files only
+            const detectedTypes = await detectDatabaseTypeFromFile(file);
+            console.log('Detected types:', detectedTypes);
+            const isValid = mapDetectedToExpected(detectedTypes, dbType);
+            console.log('Validation result:', isValid);
+            
+            if (!isValid) {
+                // Show styled error message but keep button visible
+                showError(dbType, detectedTypes);
+                console.warn('Database type mismatch - but allowing upload anyway');
+                // Don't return - allow user to proceed if they want
+            } else {
+                // Hide error if validation passes
+                hideError();
+            }
+        }
         
         // Highlight selected card
         document.querySelectorAll('.db-upload-card').forEach(card => {
@@ -327,6 +367,8 @@ function initApp() {
             if (scriptFile) scriptFile.value = '';
             if (dbTypeInput) dbTypeInput.value = '';
             if (selectedFileInfo) selectedFileInfo.classList.add('hidden');
+            const analyzeButtonContainer = document.getElementById('analyzeButtonContainer');
+            if (analyzeButtonContainer) analyzeButtonContainer.classList.add('hidden');
             if (otherDbToggle) otherDbToggle.textContent = 'Select Database ⬇️';
             if (otherDbUploadBtn) otherDbUploadBtn.classList.add('hidden');
             hideError(); // Hide any error messages
@@ -365,7 +407,8 @@ function initApp() {
             try {
                 const response = await fetch('/api/analysis', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    credentials: 'include' // Include session cookie
                 });
 
                 if (!response.ok) {
@@ -384,12 +427,19 @@ function initApp() {
 
                 if (data.success) {
                     displayResults(data.analysis);
+                    // Redirect to dashboard after successful analysis
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 2000);
                 } else {
-                    alert('Analysis failed: ' + (data.error || data.message || 'Unknown error'));
+                    const errorMsg = data.message || data.error || 'Unknown error';
+                    console.error('Analysis failed:', errorMsg);
+                    showGeneralError('Analysis Failed', [errorMsg]);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Error analyzing script: ' + error.message);
+                const errorMsg = error.message || 'Failed to analyze script. Please try again.';
+                showGeneralError('Analysis Error', [errorMsg]);
             } finally {
                 if (analyzeBtn) analyzeBtn.disabled = false;
                 if (loading) loading.classList.add('hidden');
