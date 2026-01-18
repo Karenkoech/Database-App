@@ -89,8 +89,17 @@ app.get('/contact', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/contact.html'));
 });
 
-// Static files (after routes)
-app.use(express.static(path.join(__dirname, '../public')));
+// Serve React build in production, or public folder in development
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../dist')));
+  // Fallback to React app for client-side routing
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  });
+} else {
+  // In development, serve public folder and let Vite handle React
+  app.use(express.static(path.join(__dirname, '../public')));
+}
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Error handling middleware

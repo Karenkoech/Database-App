@@ -7,7 +7,10 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
-    "create-samples": "node scripts/create-sample-excel.js"
+    "create-samples": "node scripts/create-sample-excel.js",
+    "dev:client": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "keywords": [
     "database",
@@ -26,13 +29,18 @@
     "express-session": "^1.18.2",
     "multer": "^1.4.5-lts.1",
     "openai": "^4.20.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-router-dom": "^7.12.0",
     "sqlite3": "^5.1.6",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.2",
     "autoprefixer": "^10.4.23",
     "nodemon": "^3.0.2",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "vite": "^7.3.1"
   }
 }

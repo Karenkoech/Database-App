@@ -1,0 +1,6 @@
+/* Import existing styles */
+@import '../public/css/style.css';
+@import '../public/css/auth.css';
+@import '../public/css/dashboard.css';
+@import '../public/css/contact.css';
+@import '../public/css/landing.css';
